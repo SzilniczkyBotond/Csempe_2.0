@@ -1,12 +1,5 @@
-/*
- * Block.hpp
- *
- *  Created on: 2019. jan. 17.
- *      Author: sziln
- */
-
-#ifndef BLOCK_HPP_
-#define BLOCK_HPP_
+#ifndef BLOCK_HPP_INCLUDED
+#define BLOCK_HPP_INCLUDED
 
 #include <iostream>
 #include <set>
@@ -16,11 +9,11 @@
 #include <algorithm>
 
 using namespace std;
-///Ã¡tÃ­randÃ³
+///átírandó
 #define R 1
 #define G 1
-#define B 1
-#define Rot 0
+#define B 3
+#define Rot 1
 
 
 class Database;
@@ -238,6 +231,8 @@ public:
             case 4: path_types[2] = top_to_right; break;
             case 5: path_types[2] = bot_to_right; break;
         }
+
+        rotation++;
     }
 
     Block(string, Side*, Side*, Side*, Side*, int, int, int);
@@ -289,14 +284,14 @@ ostream &operator<<(ostream &os, Block_prototype* b)
     os << b->id;
     return os;
 }
-bool operator<(Color_value& a, Color_value& b)
-{
-    if(a.value > b.value)
-        return true;
-    else if(a.col < b.col)
-        return true;
-    return false;
-}
+    bool operator<(Color_value& a, Color_value& b)
+    {
+        if(a.value > b.value)
+            return true;
+        else if(a.value == b.value && a.col < b.col)
+            return true;
+        return false;
+    }
 ostream &operator<<(ostream &os, Connection a)
 {
     os <<"############################# -> CON: " << a.first->id << " " << a.first_s_id << " " << a.second->id << " " << a.second_s_id << endl;
@@ -419,7 +414,7 @@ void read(Database* data)
         cerr << "szar a file!!! :((";
         exit(1);
     }
-    ///config beolvasÃ¡sa:
+    ///config beolvasása:
     {
         bool b;
         conf >> b;
@@ -468,6 +463,11 @@ void read(Database* data)
             }
         }
     }
+
+    /// Color_values sorting BEGIN
+
+    /// Color_values sorting END
+
     ifstream f("../input_gen/1o2i.txt");
     if(!f.good())
     {
@@ -490,10 +490,9 @@ void read(Database* data)
     		data->all_blocks.insert(b);
     	}
     }
+    cout << "osszes elem szama: " << data->all_blocks.size() <<endl;
 }
 
 
 
-
-
-#endif /* BLOCK_HPP_ */
+#endif // BLOCK_HPP_INCLUDED

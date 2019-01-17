@@ -1,14 +1,5 @@
-/*
- * Find.hpp
- *
- *  Created on: 2019. jan. 17.
- *      Author: sziln
- */
-
-#ifndef FIND_HPP_
-#define FIND_HPP_
-
-
+#ifndef FIND_HPP_INCLUDED
+#define FIND_HPP_INCLUDED
 
 #include "Block.hpp"
 #include <vector>
@@ -32,10 +23,7 @@ public:
 
 };
 
-
-
-
-void bubbleSort(vector<pair<double,Option>> &a)
+void bubbleSort(vector<pair<double,Option>> &a)         ///SZERINTEM SZAR, A MASIK ERTELMES, EZT IS AT KENE IRNI, LEHET MEGJAVUL A REKURZIV
 {
     bool swapp = true;
     while(swapp)
@@ -53,29 +41,25 @@ void bubbleSort(vector<pair<double,Option>> &a)
         }
     }
 }
-void bubbleSort(vector<pair<double,Block*>> &a)
+
+void bubbleSort(vector<pair<double,Block*>> &a)         ///JO SORT
 {
-    if(a.size() > 1)
+    bool swapp = true;
+    while(swapp)
     {
-        bool swapp = true;
-        while(swapp)
+        swapp = false;
+        for (size_t i = 0; i < a.size()-1; i++)
         {
-            swapp = false;
-            for (size_t i = 0; i < a.size()-1; i++)
+            if (a[i].first > a[i+1].first )
             {
-                if (a[i].first < a[i+1].first )
-                {
-                    a[i].first += a[i+1].first;
-                    a[i+1].first = a[i].first - a[i+1].first;
-                    a[i].first -= a[i+1].first;
-                    swapp = true;
-                }
+                pair<double, Block*> temp = a[i];
+                a[i] = a[i+1];
+                a[i+1] = temp;
+                swapp = true;
             }
         }
     }
 }
-
-
 
 Pos count_pos(Pos p, int a)
 {
@@ -166,7 +150,7 @@ void put_down(Block* to_put, Pos& p, Database* data)
 
     static int counter = 0;
     stringstream s;
-    s << "../output/2o3i_" << counter << ".txt";
+    s << "2o3i_" << counter << ".txt";
     counter++;
     ofstream of(s.str());
     for(set<Pos>::iterator it = data->ups.begin(); it != data->ups.end(); it++)
@@ -475,7 +459,6 @@ void brute_force(Database* data, Color_value* cv)
                     }
                 }
             }
-            bubbleSort(options);
             Block* temp = options[0].second;
 //                    //cout << "options size: " << options.size() << endl;
             temp->position = act;
@@ -509,6 +492,203 @@ void brute_force(Database* data, Color_value* cv)
     /////////////
 }
 
+void alap_force(Database* data, Color_value* cv)
+{
+    cout << "eppen nezett szin: " << cv->col << endl;
+
+    ///min keresés (db) + adathalmaz felép
+
+    Block_prototype* base_p = *data->all.begin();
+
+    vector<Block*> v;
+
+    {
+        for(int i = 0; i < 4; i++)
+        {
+            Block* temp = *base_p->elements.begin();
+            base_p->elements.pop_front();
+            for(int r=0; r<i; r++)
+            {
+                temp->rotate_one();
+            }
+            v.push_back(temp);
+        }
+    }
+    cout << "v.size: " << v.size() << endl;
+
+    int distance = v.size()/2;
+    Block* first = v[0];
+    v.erase(v.begin());
+    first->set_pos(0,0);
+    first->position.b = first;
+
+
+    data->ups.insert(first->position);
+    size_t i = 0;
+    do
+    {
+
+        if(first->sides[i]->colors[cv->indx] == 1) break;
+    }while(i++);
+
+    cout << "first block: " << first << " side_id_future_in: " << i << endl;
+
+    Pos last = count_pos(first->position, i);
+
+    cout << "future last block position: " << last << endl;
+
+    Block* tmp = first;
+
+    cout << "tmp block: " << tmp << endl;
+    ///
+    while(data->ups.find(last) == data->ups.end())
+    {
+        if(v.size() == 1)
+        {
+            cout << "#### v.size szerinti == 1 case: " << endl << endl;
+            size_t j = 0;
+            bool ex = false;
+            while(!ex)
+            {
+//                            //cout << tmp << " -> ";
+//                            //cout << "ITT" << endl;
+//                            //cout << "i: " << i << " ";
+//                            //cout <<"j: " << j << endl;
+//                            //cout << ((tmp->sides[j]->colors[cv->indx] == 1) && (j != i)) << endl;
+                if((tmp->sides[j]->colors[cv->indx] == 1) && (j != i)) {ex = true;}
+                else j++;
+            }
+            Pos act = count_pos(tmp->position, j);
+            Block* temp = v[0];
+            //cout << temp << endl;
+            int step_in = ((j+2)%4);
+            bool ok = true;
+            for(int it = 0; it < 4 && ok; it++)
+            {
+                Pos posit = count_pos(act, (step_in + it + 1)%4);
+                set<Pos>::iterator it_p = data->ups.find(posit);
+                if(it_p != data->ups.end())
+                {
+                    //cout << "####--" << (*it_p).b << " --###-- " << (temp->sides[((step_in + it + 1)%4)]->RGB) << " " << (((*it_p).b->sides[(((step_in + it + 1)%4)+2)%4])->RGB) << endl;
+                    ok = ok && (temp->sides[((step_in + it + 1)%4)]->RGB == ((*it_p).b->sides[(((step_in + it + 1)%4)+2)%4])->RGB);
+                }
+            }
+            if(ok)
+            {
+                temp->position = act;
+                act.b = temp;
+                data->ups.insert(act);
+
+                connect_block(act,data->ups,data->connect);
+
+//                            Connection con(tmp,j,temp,((j+2)%4));
+//                            data->connect[cv->indx].push_back(con);
+//                            //cout << con;
+
+                v.erase(v.begin());
+
+                ///set-bõl a szomszédok kellenek
+                ///Connection con_2();
+            }
+            cout << endl << "#### v.size szerinti == 1 case END: " << endl << endl;
+        }
+        else
+        {
+            cout << "#### v.size szerinti != 1 case: " << endl << endl;
+//                    //cout << (data->ups.find(last) == data->ups.end()) << endl;
+            size_t j = 0;
+            bool ex = false;
+            while(!ex)
+            {
+                //cout << tmp << " -> ";
+                //cout << "ITT" << endl;
+                //cout << "i: " << i << " ";
+                //cout <<"j: " << j << endl;
+                //cout << ((tmp->sides[j]->colors[cv->indx] == 1) && (j != i)) << endl;
+                if((tmp->sides[j]->colors[cv->indx] == 1) && (j != i)) {ex = true;}
+                else j++;
+            }
+            //cout << "i:" << i << " j:" << j << "\n";
+            vector<pair<double, Block*>> options;
+            Pos act = count_pos(tmp->position, j);
+            debug;
+            for(Block* b : v)
+            {
+                //cout << b << " -> ";
+                //cout << b->sides[3]->RGB << endl;
+                //cout << (data->ups.find(act) == data->ups.end()) << " " << (tmp->sides[j] == b->sides[((j+2)%4)]) << endl;
+                if(data->ups.find(act) == data->ups.end() && tmp->sides[j]->RGB == b->sides[((j+2)%4)]->RGB)
+                {
+                    int step_in = ((j+2)%4);
+                    bool ok = true;
+                    for(int it = 0; it < 3 && ok; it++)
+                    {
+                        Pos posit = count_pos(act, (step_in + it + 1)%4);
+                        set<Pos>::iterator it_p = data->ups.find(posit);
+                        if(it_p != data->ups.end())
+                        {
+                            ok = ok && (b->sides[((step_in + it + 1)%4)] == (*it_p).b->sides[(((step_in + it + 1)%4)+2)%4]);
+                        }
+                    }
+                    if(ok)
+                    {
+                        //cout << b << "j:" << j << endl;
+                        double w = weight(act,last,b->path_types[cv->indx],((j+2)%4), distance);
+                        cout << "option: block: " << b << " weight: " << w << endl;
+                        if(w >= 0)
+                        {
+                            options.push_back(make_pair(w, b));
+                        }
+                    }
+                }
+            }
+            cout << "options before sort: \n";
+              for(pair<double, Block*> o: options)
+            {
+                cout << "opt. : " << o.second  << "w: " << o.first << endl;
+            }
+            bubbleSort(options);
+            cout << "options after sort: \n";
+            for(pair<double, Block*> o: options)
+            {
+                cout << "opt. : " << o.second  << " w: " << o.first << endl;
+            }
+            Block* temp = options[0].second;
+                    cout << "options size: " << options.size() << endl;
+            temp->position = act;
+            act.b = temp;
+            data->ups.insert(act);
+//                    //cout << data->ups.size() << endl;
+
+
+            connect_block(act, data->ups, data->connect);
+
+//                        Connection con(tmp,j,temp,((j+2)%4));
+//                        data->connect[cv->indx].push_back(con);
+//                        //cout << con;
+
+
+
+            int iter = 0;
+            for(Block* findable : v)
+            {
+                if(findable == temp)
+                    break;
+                iter++;
+            }
+            v.erase(v.begin()+iter);
+            i = ((j+2)%4);
+            tmp = temp;
+            cout << "new temp block: " << temp << endl;
+//                    //cout << (*data->ups.find(last)).y << endl;
+            cout << endl << "#### v.size szerinti != 1 case END: " << endl << endl;
+        }
+
+    }
+
+    /////////////
+}
+
 ///XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 list<Connection>::iterator find_next(Block* b, int side_id, list<Connection> &ls)
@@ -532,7 +712,9 @@ list<Connection>::iterator find_next(Block* b, int side_id, list<Connection> &ls
     }
     return it;
 }
+ ///nagy komment
 
+///{
 //void circle_weight(Circle current, vector<double, > g)
 //{
 ////    int i=0;
@@ -563,6 +745,7 @@ list<Connection>::iterator find_next(Block* b, int side_id, list<Connection> &ls
 ////
 ////    }
 //}
+///}
 
 void max_circle(vector<Circle> all_circles)
 {
@@ -577,7 +760,7 @@ void max_circle(vector<Circle> all_circles)
 			}
 		}*/
 		//cout << "---------------EZ ITT A MÉRETE:" << all_circles.size() << endl;
-		ofstream of("../output/2o3i.txt");
+		ofstream of("2o3i.txt");
 
 		for(set<Pos>::iterator it = max_circle.ups.begin(); it != max_circle.ups.end(); it++)
 		{
@@ -599,9 +782,32 @@ void find_circle(Database* data)
     {
         for(Color_value* cv : data->color_values)
         {
-            rek_fv_prev(data, cv);
-            max_circle(data->circles);
-            break;
+            if(data->all_blocks.size() < 6)
+            {
+                alap_force(data, cv);
+                set<Block*> canvas;
+                ofstream of("2o3i.txt");
+                for(int i = 0; i < 3; i++)
+                {
+                    for(Connection c : data->connect[i])
+                    {
+                        canvas.insert(c.first);
+                        canvas.insert(c.second);
+                    }
+                }
+                for(Block* b : canvas)
+                {
+                    of << b << endl;
+                }
+                cout << "circle found: size: " << canvas.size() << " weight: " << cv->value << " color: " << cv->col << endl;
+            exit(0);
+            }
+            else
+            {
+                rek_fv_prev(data, cv);
+                max_circle(data->circles);
+                break;
+            }
         }
     }
     else
@@ -617,7 +823,7 @@ void find_circle(Database* data)
             {
                 brute_force(data, cv);
                 set<Block*> canvas;
-                ofstream of("../output/2o3i.txt");
+                ofstream of("2o3i.txt");
                 for(int i = 0; i < 3; i++)
                 {
                     for(Connection c : data->connect[i])
@@ -628,12 +834,7 @@ void find_circle(Database* data)
                 }
                 for(Block* b : canvas)
                 {
-                    set<Block*>::iterator it = canvas.end();
-                    it--;
-                    if(b != *it)
-                        of << b << endl;
-                    else
-                        of << b;
+                    of << b << endl;
                 }
                 exit(0);
                 ///kurva nagy komment
@@ -809,5 +1010,4 @@ void find_circle(Database* data)
 
 
 
-
-#endif /* FIND_HPP_ */
+#endif // FIND_HPP_INCLUDED
