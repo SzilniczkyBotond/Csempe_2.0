@@ -33,9 +33,12 @@ void bubbleSort(vector<pair<double,Option>> &a)         ///SZERINTEM SZAR, A MAS
         {
             if (a[i].first < a[i+1].first )
             {
-                a[i].first += a[i+1].first;
-                a[i+1].first = a[i].first - a[i+1].first;
-                a[i].first -= a[i+1].first;
+                pair<double, Option> temp = a[i];
+                a[i] = a[i+1];
+                a[i+1] = temp;
+//                a[i].first += a[i+1].first;
+//                a[i+1].first = a[i].first - a[i+1].first;
+//                a[i].first -= a[i+1].first;
                 swapp = true;
             }
         }

@@ -12,7 +12,7 @@ using namespace std;
 ///átírandó
 #define R 1
 #define G 1
-#define B 3
+#define B 1
 #define Rot 1
 
 
