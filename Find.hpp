@@ -293,24 +293,32 @@ void rekurziv_force(Block* act, int act_in, Pos last_pos, Database* data, Color_
 		if(future_pos == last_pos)
 		{
 		    cout << "\n############# Future == Last type BEGIN\n";
+
+		    for(set<Pos>::iterator it = data->ups.begin(); it != data->ups.end(); it++)
+            {
+			set<Pos>::iterator szar = data->ups.end();
+			szar--;
+			cout << "kor eleme copy elott: " << (*it).b << endl;
+            }
+
             cout << "recent block: " << recent << endl;
 
 			Circle c(data->ups, data->connect);
 			data->circles.push_back(c);
-			static int count_laps = 1;
 		    ///
 		    for(set<Pos>::iterator it = c.ups.begin(); it != c.ups.end(); it++)
             {
 			set<Pos>::iterator szar = c.ups.end();
 			szar--;
-			cout << "kor eleme: " << (*it).b << endl;
+			cout << "kor eleme copy utan: " << (*it).b << endl;
             }
 		    ///
+			static int count_laps = 1;
 			cout << "circle counter: " << count_laps << endl;
 			count_laps++;
 			//max_circle(data->circles);
 			//exit(0);
-		    cout << "\n############# Future == Last type BEGIN\n";
+		    cout << "\n############# Future == Last type END\n";
         }
 		else
 		{
@@ -767,13 +775,132 @@ void max_circle(vector<Circle> all_circles)
 	else cout << "nincs kör :(\n";
 }
 
+void flat_smart(Database* data, Color_value* cv)
+{
+    ofstream of("2o3i.txt");
+    Block_prototype* max_p = *data->all.begin();
+    for(Block_prototype* p : data->all)
+    {
+        if(max_p->elements.size() < p->elements.size())
+            max_p = p;
+    }
+    unsigned int smart_parameter;
+    smart_parameter = max_p->elements.size() / 2;
+    cout << "smart parameter: " << smart_parameter << endl;
+    if(data->rotateable)
+    {
+        cout << "forgatasos indy: \n";
+        vector<Block_prototype*> to_generate;
+
+        for(Block_prototype* p : data->all)
+        {
+            switch (p->path_types[cv->indx])
+            {
+                case 0 : break;
+                case 1 : break;
+                case 2 :
+                    {
+                        to_generate.push_back(p);
+                        break;
+                    }
+                case 3 :
+                    {
+                        to_generate.push_back(p);
+                        break;
+                    }
+                case 4 :
+                    {
+                        to_generate.push_back(p);
+                        break;
+                    }
+                case 5 :
+                    {
+                        to_generate.push_back(p);
+                        break;
+                    }
+             }
+        }
+        if(to_generate.size() == 1)
+        {
+
+        }
+        else if(to_generate.size() == 2)
+        {
+
+        }
+
+    }
+    else
+    {
+        cout << "forgatas nelkuli indy: \n";
+
+        for(Block_prototype* p : data->all)
+        {
+            Pos curr_pos;
+            Block* current_tile = (*p->elements.begin());
+            p->elements.pop_back();
+            switch (p->path_types[cv->indx])
+            {
+                case 0 : break;
+                case 1 :
+                    {
+                        for(int x = 1; x <1 + smart_parameter; x++)
+                        {
+                            curr_pos = Pos(x,0);
+                            current_tile->set_pos(curr_pos);
+                            of << current_tile << endl;
+
+                            curr_pos = Pos(x, 1);
+                            current_tile->set_pos(curr_pos);
+                            of << current_tile << endl;
+                        }
+                        break;
+                    }
+                case 2 :
+                    {
+                        curr_pos = Pos(0,0);
+                        current_tile->set_pos(curr_pos);
+  ///                      cout << "current tile: " << current_tile << endl;
+                        of << current_tile << endl;
+                        break;
+                    }
+                case 3 :
+                    {
+                        curr_pos = Pos(1 + smart_parameter, 0);
+                        current_tile->set_pos(curr_pos);
+   ///                     cout << "current tile: " << current_tile << endl;
+                        of << current_tile << endl;
+                        break;
+                    }
+                case 4 :
+                    {
+                        curr_pos = Pos(1 + smart_parameter, 1);
+                        current_tile->set_pos(curr_pos);
+   ///                     cout << "current tile: " << current_tile << endl;
+                        of << current_tile << endl;
+                        break;
+                    }
+                case 5 :
+                    {
+                        curr_pos = Pos(0, 1);
+                        current_tile->set_pos(curr_pos);
+     ///                   cout << "current tile: " << current_tile << endl;
+                        of << current_tile << endl;
+                        break;
+                    }
+            }
+        }
+    }
+}
+
 void find_circle(Database* data)
 {
     if(data->rotateable)
     {
+        cout << "van forgatas \n";
         for(Color_value* cv : data->color_values)
         {
-            if(data->all_blocks.size() < 4)         ///ALAP MEGOLDO
+            if(data->all_blocks.size() <= 4)         ///ALAP MEGOLDO
             {
                 alap_force(data, cv);
                 set<Block*> canvas;
@@ -806,16 +933,28 @@ void find_circle(Database* data)
     }
     else
     {
+        cout << "nincs forgatas \n";
         for(Color_value* cv : data->color_values)
         {
-            if(data->straight_count[cv->indx])          ///TEREPASZTAL MEGOLDO (indy)
+            if(data->straight_count[cv->indx])          ///TEREPASZTAL VAGY INDY MEGOLDO
             {
-                rek_fv_prev(data, cv);
-                max_circle(data->circles);
-                break;
+                cout << "van egyenes \n";
+                if(data->is_small_circle[cv->indx] == true) ///INDY MEGOLDO
+                {
+                    cout << "indy kene legyen, okos keresessel: \n \n";
+                    flat_smart(data, cv);
+                    break;
+                }
+                else                                    ///TEREPASZTAL MEDOLDO
+                {
+                    rek_fv_prev(data, cv);
+                    max_circle(data->circles);
+                    break;
+                }
             }
             else                                        ///ACHILLES MEGOLDO
             {
+                cout << "nincs egyenes\n";
                 brute_force(data, cv);
                 set<Block*> canvas;
                 ofstream of("2o3i.txt");

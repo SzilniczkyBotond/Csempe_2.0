@@ -13,7 +13,7 @@ using namespace std;
 #define R 1
 #define G 1
 #define B 1
-#define Rot 1
+#define Rot 0
 
 
 class Database;
@@ -93,6 +93,8 @@ public:
     int straight_count[3];
 
     int turn_count[3];
+
+    bool is_small_circle[3];
 
     set<Block_prototype*> a[8];
     set<Block_prototype*> all;
@@ -290,14 +292,14 @@ ostream &operator<<(ostream &os, Block_prototype* b)
     os << b->id;
     return os;
 }
-    bool operator<(Color_value& a, Color_value& b)
-    {
-        if(a.value > b.value)
-            return true;
-        else if(a.value == b.value && a.col < b.col)
-            return true;
-        return false;
-    }
+bool operator<(Color_value& a, Color_value& b)
+{
+    if(a.value > b.value)
+        return true;
+    else if(a.value == b.value && a.col < b.col)
+        return true;
+    return false;
+}
 ostream &operator<<(ostream &os, Connection a)
 {
     os <<"############################# -> CON: " << a.first->id << " " << a.first_s_id << " " << a.second->id << " " << a.second_s_id << endl;
@@ -384,7 +386,9 @@ Block::Block(string s, Side* bot_s, Side* left_s, Side* top_s, Side* right_s, in
 }
 Block::Block(Block* old)
 {
+    cout << "\n Block copy constructor BEGIN \n \n";
     id = old->id;
+    cout << "\n Block copy constructor END \n \n";
     bot_color = new Side(old->bot_color);
     left_color = new Side(old->left_color);
     top_color = new Side(old->top_color);
@@ -397,6 +401,7 @@ Block::Block(Block* old)
     sides[1] = left_color;
     sides[2] = top_color;
     sides[3] = right_color;
+
 }
 Block::~Block()
 {
@@ -447,7 +452,8 @@ void read(Database* data)
         }
         conf >> data->turn_count[0] >> data->turn_count[1] >> data->turn_count[2]
              >> data->is_four_turn[0] >> data->is_four_turn[1] >> data->is_four_turn[2]
-             >> data->straight_count[0] >> data->straight_count[1] >> data->straight_count[2];
+             >> data->straight_count[0] >> data->straight_count[1] >> data->straight_count[2]
+             >> data->is_small_circle[0] >> data->is_small_circle[1] >> data->is_small_circle[2];
         if(data->rotateable)
         {
             if(data->turn_count[0] >= 4)
@@ -517,11 +523,15 @@ void read(Database* data)
 
 Circle::Circle(set<Pos> &u, list<Connection> (&c)[3])
 {
+    cout << "new circle found, size: " << u.size() << endl;
+    cout << "copying positions:" << endl;
     for(Pos p : u)
     {
-
         Pos temp = p;
-        temp.b = new Block(p.b);
+        Block* new_block;
+        new_block = new Block(p.b);                     ///EZ A SOR NEM FUT LE, CSAK AZ ELSÕ CSEMPÉNÉL
+        cout << "tile copied: " << p.b << endl;
+        temp.b = new_block;
         temp.b->set_pos(p.b->position);
         for(int rot=0; rot < p.b->rotation; rot++)
         {
@@ -529,7 +539,7 @@ Circle::Circle(set<Pos> &u, list<Connection> (&c)[3])
         }
         ups.insert(temp);
     }
-    cout << "new circle found" << endl;
+    cout << "copying connections:" << endl;
     for(int i = 0; i < 3; i++)
     {
         for(Connection& con : c[i])
