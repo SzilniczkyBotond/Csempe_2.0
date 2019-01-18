@@ -779,7 +779,7 @@ void flat_smart(Database* data, Color_value* cv)
 {
     ofstream of("2o3i.txt");
     Block_prototype* max_p = *data->all.begin();
-    for(Block_prototype* p : data->all)
+    for(Block_prototype* p : data->all)                 ///egyenes (legnagyobb elemszámú) típus megkeresése
     {
         if(max_p->elements.size() < p->elements.size())
             max_p = p;
@@ -787,13 +787,14 @@ void flat_smart(Database* data, Color_value* cv)
     unsigned int smart_parameter;
     smart_parameter = max_p->elements.size() / 2;
     cout << "smart parameter: " << smart_parameter << endl;
-    if(data->rotateable)
+    if(data->rotateable)                                ///frogatás esetén kanyarok kreálása
     {
         cout << "forgatasos indy: \n";
         vector<Block_prototype*> to_generate;
 
-        for(Block_prototype* p : data->all)
+        for(Block_prototype* p : data->all)             ///kanyar típusúak kiválasztása
         {
+            cout << "current bp path_type: " << p->path_types[cv->indx] <<endl;
             switch (p->path_types[cv->indx])
             {
                 case 0 : break;
@@ -820,118 +821,175 @@ void flat_smart(Database* data, Color_value* cv)
                     }
              }
         }
-        if(to_generate.size() == 1)
+        for(Block_prototype* p : to_generate)           ///kanyar típusúak megfelelő mennyiségű reprodukálása
         {
-
-        }
-        else if(to_generate.size() == 2)
-        {
-
+            if(to_generate.size() == 1)
+            {
+                for(int rot = 1; rot < 4; rot++)
+                {
+                    Block_prototype* new_b_type = new Block_prototype(p);
+                    for(int i=0; i<rot; i++)
+                    {
+                        new_b_type->rotate_one();
+                    }
+                    data->all.insert(new_b_type);
+                }
+            }
+            else if(to_generate.size() == 2)
+            {
+                for(int rot = 1; rot < 2; rot++)
+                {
+                    Block_prototype* new_b_type = new Block_prototype(p);
+                    for(int i=0; i<rot; i++)
+                    {
+                        new_b_type->rotate_one();
+                    }
+                    data->all.insert(new_b_type);
+                }
+            }
         }
 
     }
-    else
+    else                                                ///nincs forgatás, van elég kanyar
     {
         cout << "forgatas nelkuli indy: \n";
 
-        for(Block_prototype* p : data->all)
-        {
-            Pos curr_pos;
-            Block* current_tile = (*p->elements.begin());
-            p->elements.pop_back();
-            switch (p->path_types[cv->indx])
-            {
-                case 0 : break;
-                case 1 :
-                    {
-                        for(int x = 1; x <1 + smart_parameter; x++)
-                        {
-                            curr_pos = Pos(x,0);
-                            current_tile->set_pos(curr_pos);
-                            of << current_tile << endl;
+    }
 
-                            curr_pos = Pos(x, 1);
-                            current_tile->set_pos(curr_pos);
-                            of << current_tile << endl;
-                        }
-                        break;
-                    }
-                case 2 :
+    for(Block_prototype* p : data->all)                 ///adathalmaz okos lepakolása, kiíratása, pontszámítás kéne még
+    {
+        Pos curr_pos;
+        Block* current_tile = (*p->elements.begin());
+        current_tile->rotation = p->rotation;
+        p->elements.pop_back();
+        cout << "current tile path_type: " << p->path_types[cv->indx] << endl;
+        switch (p->path_types[cv->indx])
+        {
+            case 0 :
+                {
+                    current_tile->rotate_one();
+                    for(int x = 1; x <1 + smart_parameter; x++)
                     {
-                        curr_pos = Pos(0,0);
+                        curr_pos = Pos(x,0);
                         current_tile->set_pos(curr_pos);
-  ///                      cout << "current tile: " << current_tile << endl;
+                        cout << "current tile: " << current_tile << endl;
                         of << current_tile << endl;
-                        break;
+
+                        curr_pos = Pos(x, 1);
+                        current_tile->set_pos(curr_pos);
+                        cout << "current tile: " << current_tile << endl;
+                        of << current_tile << endl;
                     }
-                case 3 :
+                    break;
+                }
+            case 1 :
+                {
+                    for(int x = 1; x <1 + smart_parameter; x++)
                     {
-                        curr_pos = Pos(1 + smart_parameter, 0);
+                        curr_pos = Pos(x,0);
                         current_tile->set_pos(curr_pos);
-   ///                     cout << "current tile: " << current_tile << endl;
+                        cout << "current tile: " << current_tile << endl;
                         of << current_tile << endl;
-                        break;
-                    }
-                case 4 :
-                    {
-                        curr_pos = Pos(1 + smart_parameter, 1);
+
+                        curr_pos = Pos(x, 1);
                         current_tile->set_pos(curr_pos);
-   ///                     cout << "current tile: " << current_tile << endl;
+                        cout << "current tile: " << current_tile << endl;
                         of << current_tile << endl;
-                        break;
                     }
-                case 5 :
-                    {
-                        curr_pos = Pos(0, 1);
-                        current_tile->set_pos(curr_pos);
-     ///                   cout << "current tile: " << current_tile << endl;
-                        of << current_tile << endl;
-                        break;
-                    }
-            }
+                    break;
+                }
+            case 2 :
+                {
+                    curr_pos = Pos(0,0);
+                    current_tile->set_pos(curr_pos);
+                    cout << "current tile: " << current_tile << endl;
+                    of << current_tile << endl;
+                    break;
+                }
+            case 3 :
+                {
+                    curr_pos = Pos(1 + smart_parameter, 0);
+                    current_tile->set_pos(curr_pos);
+                    cout << "current tile: " << current_tile << endl;
+                    of << current_tile << endl;
+                    break;
+                }
+            case 4 :
+                {
+                    curr_pos = Pos(1 + smart_parameter, 1);
+                    current_tile->set_pos(curr_pos);
+                    cout << "current tile: " << current_tile << endl;
+                    of << current_tile << endl;
+                    break;
+                }
+            case 5 :
+                {
+                    curr_pos = Pos(0, 1);
+                    current_tile->set_pos(curr_pos);
+                    cout << "current tile: " << current_tile << endl;
+                    of << current_tile << endl;
+                    break;
+                }
         }
     }
 }
 
 void find_circle(Database* data)
 {
-    if(data->rotateable)
+    if(data->rotateable)                                ///VAN FORGATAS
     {
         cout << "van forgatas \n";
         for(Color_value* cv : data->color_values)
         {
-            if(data->all_blocks.size() <= 4)         ///ALAP MEGOLDO
+            if(data->straight_count[cv->indx])              ///VAN EGYENES
             {
-                alap_force(data, cv);
-                set<Block*> canvas;
-                ofstream of("2o3i.txt");
-                for(int i = 0; i < 3; i++)
+                cout << "van egyenes \n";
+                for(Color_value* cv : data->color_values)
                 {
-                    for(Connection c : data->connect[i])
+                    cout << "forgatos indy kene legyen, okos keresessel: \n \n";
+                    flat_smart(data, cv);
+                    exit(0);
+                }
+            }
+            else                                            ///NINCS EGYENES
+            {
+                cout << "nincs egyenes\n";
+                for(Color_value* cv : data->color_values)
+                {
+                    if(data->all_blocks.size() <= 4)         ///ALAP MEGOLDO
                     {
-                        canvas.insert(c.first);
-                        canvas.insert(c.second);
+                        alap_force(data, cv);
+                        set<Block*> canvas;
+                        ofstream of("2o3i.txt");
+                        for(int i = 0; i < 3; i++)
+                        {
+                            for(Connection c : data->connect[i])
+                            {
+                                canvas.insert(c.first);
+                                canvas.insert(c.second);
+                            }
+                        }
+                        for(Block* b : canvas)
+                        {
+                            of << b << endl;
+                        }
+                        cout << "circle found: size: " << canvas.size() << " weight: " << cv->value << " color: " << cv->col << endl;
+                    exit(0);
+                    }
+                    else                                    ///MONOKROM MEGOLDO
+                    {
+                        cout << "monokrom kene legyen, rekurziv keresessel: \n \n";
+                        rek_fv_prev(data, cv);
+                        cout << "elso pozicioju csempe: " << (*(data->ups.begin())).b << endl;
+                        cout << "kereses megtortent, kiiratas jon: \n \n";
+                        max_circle(data->circles);
+                        break;
                     }
                 }
-                for(Block* b : canvas)
-                {
-                    of << b << endl;
-                }
-                cout << "circle found: size: " << canvas.size() << " weight: " << cv->value << " color: " << cv->col << endl;
-            exit(0);
-            }
-            else
-            {
-                cout << "monokrom kene legyen, rekurziv keresessel: \n \n";
-                rek_fv_prev(data, cv);
-                cout << "elso pozicioju csempe: " << (*(data->ups.begin())).b << endl;
-                cout << "kereses megtortent, kiiratas jon: \n \n";
-                max_circle(data->circles);
-                break;
             }
         }
     }
-    else
+    else                                                ///NINCS FORGATAS
     {
         cout << "nincs forgatas \n";
         for(Color_value* cv : data->color_values)

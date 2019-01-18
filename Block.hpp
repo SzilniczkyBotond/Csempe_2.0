@@ -13,7 +13,7 @@ using namespace std;
 #define R 1
 #define G 1
 #define B 1
-#define Rot 0
+#define Rot 1
 
 
 class Database;
@@ -174,6 +174,7 @@ public:
     list<Block*> elements;
 
     Block_prototype(ifstream&);
+    Block_prototype(Block_prototype*);
     ~Block_prototype();
 };
 ///#######################################################################################///
@@ -352,6 +353,25 @@ Block_prototype::Block_prototype(ifstream& f)
    /// cout << "######" << this << "#######\n";
 
 
+}
+Block_prototype::Block_prototype(Block_prototype* old)
+{
+    cout << "\n Block_prototype copy constructor BEGIN \n \n";
+    id = old->id;
+    bot_color = new Side(old->bot_color);
+    left_color = new Side(old->left_color);
+    top_color = new Side(old->top_color);
+    right_color = new Side(old->right_color);
+    for(int i=0; i<(sizeof (old->path_types)); i++)
+    {
+        path_types[i] = old->path_types[i];
+    }
+    sides[0] = bot_color;
+    sides[1] = left_color;
+    sides[2] = top_color;
+    sides[3] = right_color;
+
+    cout << "\n Block_prototype copy constructor END \n \n";
 }
 Block_prototype::~Block_prototype()
 {
