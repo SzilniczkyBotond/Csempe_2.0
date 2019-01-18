@@ -23,6 +23,7 @@ class Side;
 class Color_value;
 class Pos;
 class Connection;
+
 ///vertical = 0, horizontal = 1, ...
 enum Path_type {vertical, horizontal, bot_to_right, bot_to_left, top_to_left, top_to_right};
 /// black = 0, red = 1, green = 2, yellow = 3, blue = 4, purple = 5, turquoise = 6, white = 7 ///
@@ -76,22 +77,7 @@ public:
     set<Pos> ups;
     list<Connection> connect[3];
 
-    Circle(set<Pos> &u, list<Connection> (&c)[3])
-    {
-        for(Pos p : u)
-        {
-            Pos temp = p;
-            temp.b = new Block(p.b);
-            ups.insert(temp);
-        }
-        for(int i = 0; i < 3; i++)
-        {
-            for(Connection& con : c[i])
-            {
-                connect[i].push_back(con);
-            }
-        }
-    }
+    Circle(set<Pos> &u, list<Connection> (&c)[3]);
 };
 class Database
 {
@@ -529,6 +515,28 @@ void read(Database* data)
     cout << "osszes elem szama: " << data->all_blocks.size() <<endl;
 }
 
+Circle::Circle(set<Pos> &u, list<Connection> (&c)[3])
+{
+    for(Pos p : u)
+    {
 
+        Pos temp = p;
+        temp.b = new Block(p.b);
+        temp.b->set_pos(p.b->position);
+        for(int rot=0; rot < p.b->rotation; rot++)
+        {
+            temp.b->rotate_one();
+        }
+        ups.insert(temp);
+    }
+    cout << "new circle found" << endl;
+    for(int i = 0; i < 3; i++)
+    {
+        for(Connection& con : c[i])
+        {
+            connect[i].push_back(con);
+        }
+    }
+}
 
 #endif // BLOCK_HPP_INCLUDED
