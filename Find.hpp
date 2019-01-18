@@ -292,6 +292,9 @@ void rekurziv_force(Block* act, int act_in, Pos last_pos, Database* data, Color_
 			cout << "pos: " << future_pos << "pos_l: " << last_pos;
 		if(future_pos == last_pos)
 		{
+		    cout << "\n############# Future == Last type BEGIN\n";
+            cout << "recent block: " << recent << endl;
+
 			Circle c(data->ups, data->connect);
 			data->circles.push_back(c);
 			static int count_laps = 1;
@@ -307,7 +310,8 @@ void rekurziv_force(Block* act, int act_in, Pos last_pos, Database* data, Color_
 			count_laps++;
 			//max_circle(data->circles);
 			//exit(0);
-		}
+		    cout << "\n############# Future == Last type BEGIN\n";
+        }
 		else
 		{
 			rekurziv_force(recent, future_in, last_pos, data, cv);
