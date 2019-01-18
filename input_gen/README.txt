@@ -1,0 +1,1 @@
+Tiles for Input Generator program must be 0000.png - 0215.png in a directory named "tiles".
