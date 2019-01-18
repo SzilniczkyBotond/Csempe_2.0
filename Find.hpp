@@ -203,15 +203,21 @@ void can_be_placed(Block_prototype* patient, Pos& patient_pos, Pos& last_pos, ve
             if(chmod_check(patient,patient_pos, data))
             {
                 Option op(patient,rot);
+                int size_all = (data->all_blocks.size()/2);
+                if(patient->elements.size() == 0)
+                	return;
 //                //cout << "ez a cv indx: " << cv->indx << endl;
 //                //cout << "ez a path_type: " << patient->path_types[cv->indx] << endl;
-                options.push_back(make_pair(weight(patient_pos, last_pos, patient->path_types[cv->indx], patient_in, (data->all.size()/2) ),
-                                       op));
+                pair<double, Option> pr = make_pair(weight(patient_pos, last_pos, patient->path_types[cv->indx], patient_in, size_all), op);
+                if(pr.first >= 0.0)
+                {
+                	options.push_back(pr);
+                }
 //                //cout << "ez az op merete: " << options.size() << endl;
             }
-            patient->rotation++;
-            //patient->rotate_one();
+            patient->rotate_one();
         }
+        patient->reset_rotation();
     }
     else
     {
@@ -274,11 +280,11 @@ void rekurziv_force(Block* act, int act_in, Pos last_pos, Database* data, Color_
 		Block* recent = *current.bp->elements.begin();
 		current.bp->elements.pop_front();
 		//cout << "######################################rot: "  << current->rot << endl;
-		recent->rotation = current.rot;
-//        for(int i = 0; i < current->rot; i++)
-//        {
-//            recent->rotate_one();
-//        }
+//		recent->rotation = current.rot;
+        for(int i = 0; i < current.rot; i++)
+        {
+            recent->rotate_one();
+        }
 		///lerak
 		put_down(recent,future_pos,data);
 		///if
@@ -288,8 +294,16 @@ void rekurziv_force(Block* act, int act_in, Pos last_pos, Database* data, Color_
 		{
 			Circle c(data->ups, data->connect);
 			data->circles.push_back(c);
-			static int count_laps = 0;
-			cout << count_laps << endl;
+			static int count_laps = 1;
+		    ///
+		    for(set<Pos>::iterator it = c.ups.begin(); it != c.ups.end(); it++)
+            {
+			set<Pos>::iterator szar = c.ups.end();
+			szar--;
+			cout << "kor eleme: " << (*it).b << endl;
+            }
+		    ///
+			cout << "circle counter: " << count_laps << endl;
 			count_laps++;
 			//max_circle(data->circles);
 			//exit(0);
@@ -300,6 +314,7 @@ void rekurziv_force(Block* act, int act_in, Pos last_pos, Database* data, Color_
 		}
 		///felvesz
 		pick_up(recent, future_pos, data);
+		recent->reset_rotation();
 		current.bp->elements.push_back(recent);
 		data->all_blocks.insert(recent);
 	}
@@ -717,44 +732,12 @@ list<Connection>::iterator find_next(Block* b, int side_id, list<Connection> &ls
 }
  ///nagy komment
 
-///{
-//void circle_weight(Circle current, vector<double, > g)
-//{
-////    int i=0;
-////    Block* first_b = *current.connect[i].begin().first;
-////    int first_s = *current.connect[i].begin().first_s_id;
-////    Block* second_b = *current.connect[i].begin().second;
-////    int second_s = *current.connect[i].begin().second_s_id;
-////    current.connect[i].pop_front();
-////
-////    size_t cnt=1;
-////    while(current.connect[i].size() != 0)
-////    {
-////        list<Connection>::iterator it = find_next(second_b, second_s, current.connect[i]);
-////        if(it == current.connect[i].end())
-////        {
-////            first_b = *current.connect[i].begin().first;
-////            first_s = *current.connect[i].begin().first_s_id;
-////            second_b = *current.connect[i].begin().second;
-////            second_s = *current.connect[i].begin().second_s_id;
-////            current.connect[i].pop_front();
-////            cnt = 1;
-////        }
-////        cnt++;
-////        if(first_b == (*it).first)
-////        {
-////
-////        }
-////
-////    }
-//}
-///}
-
 void max_circle(vector<Circle> all_circles)
 {
 	if(all_circles.size() != 0)
     {
 		Circle max_circle = all_circles[0];
+
 		/*for(int i = 1; i < all_circles.size(); i++)
 		{
 			if(all_circles[i].ups.size() > max_circle.ups.size())
@@ -769,7 +752,8 @@ void max_circle(vector<Circle> all_circles)
 		{
 			set<Pos>::iterator szar = max_circle.ups.end();
 			szar--;
-			if(it != szar)
+			cout << "kor eleme: " << (*it).b << endl;
+ 			if(it != szar)
 				of << (*it).b << endl;
 			else
 				of << (*it).b;
@@ -785,7 +769,7 @@ void find_circle(Database* data)
     {
         for(Color_value* cv : data->color_values)
         {
-            if(data->all_blocks.size() < 6)
+            if(data->all_blocks.size() < 4)         ///ALAP MEGOLDO
             {
                 alap_force(data, cv);
                 set<Block*> canvas;
@@ -807,7 +791,10 @@ void find_circle(Database* data)
             }
             else
             {
+                cout << "monokrom kene legyen, rekurziv keresessel: \n \n";
                 rek_fv_prev(data, cv);
+                cout << "elso pozicioju csempe: " << (*(data->ups.begin())).b << endl;
+                cout << "kereses megtortent, kiiratas jon: \n \n";
                 max_circle(data->circles);
                 break;
             }
@@ -817,12 +804,13 @@ void find_circle(Database* data)
     {
         for(Color_value* cv : data->color_values)
         {
-            if(data->straight_count[cv->indx])
+            if(data->straight_count[cv->indx])          ///TEREPASZTAL MEGOLDO (indy)
             {
                 rek_fv_prev(data, cv);
                 max_circle(data->circles);
+                break;
             }
-            else
+            else                                        ///ACHILLES MEGOLDO
             {
                 brute_force(data, cv);
                 set<Block*> canvas;

@@ -75,11 +75,14 @@ class Circle
 public:
     set<Pos> ups;
     list<Connection> connect[3];
+
     Circle(set<Pos> &u, list<Connection> (&c)[3])
     {
         for(Pos p : u)
         {
-            ups.insert(p);
+            Pos temp = p;
+            temp.b = new Block(p.b);
+            ups.insert(temp);
         }
         for(int i = 0; i < 3; i++)
         {
@@ -134,7 +137,7 @@ public:
 
     Path_type path_types[3];
 
-    void rotate_one()
+   void rotate_one()
     {
         Side* tmp = sides[0];
         sides[0] = sides[3];
@@ -168,6 +171,15 @@ public:
             case 3: path_types[2] = top_to_left; break;
             case 4: path_types[2] = top_to_right; break;
             case 5: path_types[2] = bot_to_right; break;
+        }
+        rotation = ((rotation + 1)%4);
+    }
+    void reset_rotation()
+    {
+        int rot_to_null = 4-rotation;
+        for(int i = 0; i < rot_to_null; i++)
+        {
+            this->rotate_one();
         }
     }
 
@@ -231,11 +243,19 @@ public:
             case 4: path_types[2] = top_to_right; break;
             case 5: path_types[2] = bot_to_right; break;
         }
-
-        rotation++;
+        rotation = ((rotation + 1)%4);
+    }
+    void reset_rotation()
+    {
+        int rot_to_null = 4-rotation;
+        for(int i = 0; i < rot_to_null; i++)
+        {
+            this->rotate_one();
+        }
     }
 
     Block(string, Side*, Side*, Side*, Side*, int, int, int);
+    Block(Block*);
     ~Block();
 
     void set_pos(int x, int y){ position.x = x; position.y = y;};
@@ -375,6 +395,22 @@ Block::Block(string s, Side* bot_s, Side* left_s, Side* top_s, Side* right_s, in
     sides[2] = top_color;
     sides[3] = right_color;
  ///   cout << "######" << this << "######" << endl;
+}
+Block::Block(Block* old)
+{
+    id = old->id;
+    bot_color = new Side(old->bot_color);
+    left_color = new Side(old->left_color);
+    top_color = new Side(old->top_color);
+    right_color = new Side(old->right_color);
+    for(int i=0; i<(sizeof (old->path_types)); i++)
+    {
+        path_types[i] = old->path_types[i];
+    }
+    sides[0] = bot_color;
+    sides[1] = left_color;
+    sides[2] = top_color;
+    sides[3] = right_color;
 }
 Block::~Block()
 {
